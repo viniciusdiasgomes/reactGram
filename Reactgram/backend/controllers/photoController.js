@@ -111,6 +111,114 @@ const getPhotoById = async (req, res) => {
 }
 
 // Update a photo
+const updatePhoto = async(req, res) => {
+
+    const {id} = req.params
+    const {title} = req.body
+
+    const reqUser = req.user
+
+    const photo =await Photo.findById(id)
+
+
+    //check if photo exists
+    if(!photo){
+        res.status(404).json({errors: ["Foto nao encontrada"]})
+        return
+    }
+
+    //check if photo belongs to user
+
+    if(!photo.userId.equals(reqUser._id)){
+        res.status(422).json({errors: ["Ocorreu um erro, porfavor tente mais tarde"]})
+        return
+    }
+
+
+    if(title){
+       photo.title = title 
+    }
+
+    await photo.save()
+    res.status(200).json({photo, message:"Foto atualizada com sucesso"})
+}
+
+//like functionality
+const likePhoto = async (req, res) => {
+    const {id} = req.params
+
+    const reqUser = req.user
+
+    const photo = await Photo.findById(id)
+
+  //check if photo exists
+    if(!photo){
+        res.status(404).json({errors: ["Foto nao encontrada"]})
+        return
+    }
+
+    // check if user alredy liked the photo
+    if(photo.likes.includes(reqUser._id)) {
+        res.status(422).json({errors:["voce ja curtiu a foto"]})
+        return
+    }
+
+    //put user id in likes array
+    photo.likes.push(reqUser._id)
+
+    photo.save()
+
+    res
+    .status(200)
+    .json({photoId: id, userid:reqUser._id, message:"A foto foi curtida"})
+}
+
+
+// coment functionality
+const commentPhoto = async (req,res) => {
+
+    const {id} = req.params
+    const {comment} = req.body
+
+    const reqUser = req.user
+
+    const user = await User.findById(reqUser._id)
+
+    const photo = await Photo.findById(id)
+
+     //check if photo exists
+     if(!photo){
+        res.status(404).json({errors: ["Foto nao encontrada"]})
+        return
+    }
+
+
+    // put comment in the array of comments
+    const userComment = {
+        comment,
+        userName: user.name,
+        userImage: user.profileImage,
+        userId: user._id
+    }
+
+    photo.comments.push(userComment)
+
+    await photo.save()
+
+    res.status(200).json
+    ({
+        comment: userComment,
+        message: "O comentario foi adicionado"
+    })
+}
+
+//search photos by title
+const searchPhotos = async(req, res) => {
+    const {q} = req.query
+    const photos = await Photo.find({title: new ReqExp(q, "i")}).exec()
+    res.status(200).json(photos)
+
+} 
 
 
 
@@ -120,4 +228,8 @@ module.exports = {
  getAllPhotos,
  getUserPhotos,
  getPhotoById,
+ updatePhoto,
+ likePhoto,
+ commentPhoto,
+ searchPhotos,
 };
