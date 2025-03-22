@@ -1,0 +1,43 @@
+import './App.css';
+
+// Router
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+//hooks
+import { useAuth } from './hooks/useAuth';
+
+// Pages
+import Home from "./pages/Home/home";
+import Login from "./pages/Auth/login";
+import Register from "./pages/Auth/register";
+
+// Components
+import Navbar from "./components/Navbar";
+import Footer from "./components/footer";
+
+function App() {
+  const { auth, loading } = useAuth();
+
+  // Exibir a mensagem de "carregando" enquanto não determinar o status de autenticação
+  if (loading) {
+    return <p>Carregando...</p>;
+  }
+
+  return (
+    <div className="App">
+      <BrowserRouter>
+        <Navbar />
+        <div className='container'>
+          <Routes>
+            <Route path="/" element={auth ? <Home /> : <Navigate to="/login" />} />
+            <Route path="/login" element={auth ? <Navigate to="/" /> : <Login />} />
+            <Route path="/register" element={auth ? <Navigate to="/" /> : <Register />} />
+          </Routes>
+        </div>
+        <Footer />
+      </BrowserRouter>
+    </div>
+  );
+}
+
+export default App;
